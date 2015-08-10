@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body{
+  font-family: sans;
+  padding: 10px;
+}
+svg path{
+  stroke: #000;
+  stroke-width: 1px;
+  stroke: rgba(0,0,0,0.2);
+}
+svg{
+  border: 1px solid #DED8BF;
+  background-color: #f4f4d9;
+  width: 700px;
+  height: 400px;
+}
+h1{
+  font-weight: normal;
+  margin: 0;
+  padding-left: 5px;
+  color: #53483e;
+}
+p{
+  margin: 0;
+  margin-bottom: 10px;
+  padding-left: 5px;
+  color: #917e6b;
+}
+ul{
+  width: 200px;
+  float: left;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  padding-right: 10px;
+}
+li{
+  cursor: pointer;
+  background-color: #c8ad93;
+  padding: 10px;
+  margin: 2px;
+  color: #fff;
+}
+</style>
+</head>
+<body>
+  <h1>D3.js Surface Plots</h1>
+  <p>Drag graph to change view</p>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="surface3d.js"></script>
+  <script>
+  var yaw=0.5,pitch=0.5, width=700, height=400, drag=false;
+
+  function dataFromFormular(func){
+    var output=[];
+    for(var x=-20;x<20;x++){
+      var f0=[];            
+      output.push(f0);
+      for(var y=-20;y<20;y++){
+          f0.push(func(x,y));
+      }
+    }
+    return output;
+  }
+
+  var surfaces=[
+    {
+      name: 'Dataset 1',
+      data: [[39.173958333334,-37.4239583333335,-23.6939583333339,-3.36395833333469,9.54604166666613,31.9260416666658,26.8560416666666,19.0060416666661],
+            [103.783958333334,-23.0539583333346,40.9660416666654,19.9860416666667,-1.9639583333344,10.356041666666,15.5560416666653,21.7060416666662],
+            [175.573958333334,-102.053958333334,-88.3439583333349,-109.373958333335,-104.043958333335,-79.5439583333334,-40.9739583333334,-20.5839583333344],
+            [-25.4360416666657,63.1160416666667,57.7260416666661,59.5160416666666,44.0460416666653,37.9260416666661,53.5860416666658,74.7760416666665],
+            [89.4239583333345,-116.413958333334,-81.1639583333339,-78.8239583333336,-79.6039583333339,-59.163958333334,-47.1339583333339,-24.1739583333349],
+            [-147.476041666666,109.796041666666,81.6660416666657,73.8860416666661,92.9360416666661,111.036041666666,146.076041666666,153.946041666666]]
+    },
+  ];
+
+  var scale = d3.scale.linear().domain([50, 53]).range([0, 100]);    
+
+  var selected=surfaces[0];
+
+  var ul=d3.select('body')
+           .append('ul');
+  var svg=d3.select('body')
+          .append('svg')
+            .attr('height',height)
+            .attr('width',width);
+
+  var group = svg.append("g");
+
+  var md=group.data([surfaces[0].data])
+    .surface3D(width,height)
+      .surfaceHeight(function(d){ 
+        return d;
+      }).surfaceColor(function(d){
+        var c=d3.hsl((d+100), 0.6, 0.5).rgb();
+        return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
+      });
+
+  ul.selectAll('li')
+    .data(surfaces)
+      .enter().append('li')
+        .html(function(d){
+          return d.name
+        }).on('mousedown',function(){
+          md.data([d3.select(this).datum().data]).surface3D()
+            .transition().duration(500)
+            .surfaceHeight(function(d){
+              return d;
+            }).surfaceColor(function(d){
+              var c=d3.hsl((d+100), 0.6, 0.5).rgb();
+              return "rgb("+parseInt(c.r)+","+parseInt(c.g)+","+parseInt(c.b)+")";
+            });
+        });
+
+  svg.on("mousedown",function(){
+    drag=[d3.mouse(this),yaw,pitch];
+  }).on("mouseup",function(){
+    drag=false;
+  }).on("mousemove",function(){
+    if(drag){            
+      var mouse=d3.mouse(this);
+      yaw=drag[1]-(mouse[0]-drag[0][0])/50;
+      pitch=drag[2]+(mouse[1]-drag[0][1])/50;
+      pitch=Math.max(-Math.PI/2,Math.min(Math.PI/2,pitch));
+      md.turntable(yaw,pitch);
+    }
+  });
+  
+  </script>
+</body>
+</html>
